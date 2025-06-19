@@ -22,6 +22,18 @@ type ValidationErrorDetails struct {
 	Message string `json:"message"`
 }
 
+type ResponseIndex[T any] struct {
+	Status  bool `json:"status"`
+	Data    T    `json:"data"`
+	Message string `json:"message"`
+	Code    int    `json:"code"`
+}
+
+type PagedResult[T any] struct {
+	Result []T `json:"result"`
+	Count  int `json:"count"`
+}
+
 func ResponseOK(ctx *gin.Context, res any) {
 	ctx.JSON(http.StatusOK, Response{Message: appconstant.MsgOK, Data: res})
 }

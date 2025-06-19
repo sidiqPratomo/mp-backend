@@ -14,6 +14,7 @@ import (
 type routerOpts struct {
 	Authentication *handler.AuthenticationHandler
 	User           *handler.UserHandler
+	Voucher        *handler.VoucherHandler
 }
 
 type utilOpts struct {
@@ -50,6 +51,7 @@ func newRouter(h routerOpts, u utilOpts, config *config.Config, log *logrus.Logg
 	{
 		authenticationRouting(api, h.Authentication, authMiddleware)
 		userRouting(api, h.User, authMiddleware)
+		voucherRouting(api, h.Voucher, authMiddleware)
 	}
 
 	return router
@@ -81,4 +83,14 @@ func userRouting(router *gin.RouterGroup, handler *handler.UserHandler, authMidd
 	authRouter.GET("/:id", authMiddleware, handler.ReadUser)
 	authRouter.PUT("/:id", authMiddleware, handler.UpdateUser)
 	authRouter.PUT("/:id/delete", authMiddleware, handler.DeleteUser)
+}
+
+func voucherRouting(router *gin.RouterGroup, handler *handler.VoucherHandler, authMiddleware gin.HandlerFunc) {
+	authRouter := router.Group("/voucher")
+
+	authRouter.GET("/", authMiddleware, handler.Index)
+	authRouter.POST("/", authMiddleware, handler.Create)
+	authRouter.GET("/:id", authMiddleware, handler.Read)
+	authRouter.PUT("/:id", authMiddleware, handler.Update)
+	authRouter.PUT("/:id/delete", authMiddleware, handler.Delete)
 }

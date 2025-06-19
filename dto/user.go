@@ -132,18 +132,6 @@ type Users struct {
 	Users []User `json:"users"`
 }
 
-type ResponseIndex[T any] struct {
-	Status  bool   `json:"status"`
-	Data    T      `json:"data"`
-	Message string `json:"message"`
-	Code    int    `json:"code"`
-}
-
-type PagedResult[T any] struct {
-	Result []T `json:"result"`
-	Count  int `json:"count"`
-}
-
 func MapDTOQuerytoEntity(params UserQueryParams) entity.UserQuery {
 	var status *int
 	if params.Status != nil {

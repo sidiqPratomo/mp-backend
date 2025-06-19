@@ -26,6 +26,7 @@ func createRouter(log *logrus.Logger, config *config.Config) *gin.Engine {
 	db := database.ConnectDB(config, log)
 
 	userRepository := repository.NewUserRepositoryDB(db)
+	voucherRepository := repository.NewVoucherRepositoryDB(db)
 	tokenRepository := repository.NewRefreshTokenRepositoryDB(db)
 	transaction := repository.NewSqlTransaction(db)
 	emailHelper := util.NewEmailHelperIpl(config)
@@ -48,14 +49,20 @@ func createRouter(log *logrus.Logger, config *config.Config) *gin.Engine {
 		Transaction:    transaction,
 		JwtHelper:      jwtAuthentication,
 	})
+	voucherUsecase := usecase.NewVoucherUsecaseImpl(usecase.VoucherUsecaseImplOpts{
+		VoucherRepository: &voucherRepository,
+		Transaction:       transaction,
+	})
 
 	authenticationHandler := handler.NewAuthenticationHandler(&authenticationUsecase)
 	userHandler := handler.NewUserHandler(&userUsercase)
+	voucherHandler := handler.NewVoucherHandler(&voucherUsecase)
 
 	return newRouter(
 		routerOpts{
 			Authentication: &authenticationHandler,
 			User:           &userHandler,
+			Voucher:        &voucherHandler,
 		},
 		utilOpts{
 			JwtHelper: jwtAuthentication,
