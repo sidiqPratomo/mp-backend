@@ -2,6 +2,8 @@ package usecase
 
 import (
 	"context"
+	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/sidiqPratomo/mp-backend/dto"
@@ -19,18 +21,18 @@ type VoucherUsecase interface {
 
 type voucherUsecaseImpl struct {
 	voucherRepository repository.VoucherRepository
-	transaction    repository.Transaction
+	transaction       repository.Transaction
 }
 
 type VoucherUsecaseImplOpts struct {
 	VoucherRepository repository.VoucherRepository
-	Transaction    repository.Transaction
+	Transaction       repository.Transaction
 }
 
 func NewVoucherUsecaseImpl(opts VoucherUsecaseImplOpts) voucherUsecaseImpl {
 	return voucherUsecaseImpl{
 		voucherRepository: opts.VoucherRepository,
-		transaction:    opts.Transaction,
+		transaction:       opts.Transaction,
 	}
 }
 
@@ -85,14 +87,25 @@ func (uc *voucherUsecaseImpl) Read(ctx context.Context, voucherID int) (*dto.Vou
 }
 
 func (uc *voucherUsecaseImpl) Create(ctx context.Context, input dto.UpdateVoucherRequest) (*dto.VoucherDetail, error) {
+	layout := "2006-01-02"
+	parsedDate, err := time.Parse(layout, input.ExpiryDate)
+	if err != nil {
+		return nil, fmt.Errorf("invalid date format, must be YYYY-MM-DD: %w", err)
+	}
+
+	discountPercent, err := strconv.Atoi(input.DiscountPercent)
+	if err != nil {
+		return nil, fmt.Errorf("invalid discount percent, must be an integer: %w", err)
+	}
+
 	voucher := entity.Voucher{
 		VoucherCode:     input.VoucherCode,
-		DiscountPercent: input.DiscountPercent,
-		ExpiryDate:      input.ExpiryDate,
+		DiscountPercent: discountPercent,
+		ExpiryDate:      parsedDate,
 		CreatedAt:       time.Now(),
 		UpdatedAt:       time.Now(),
 	}
-	err := uc.voucherRepository.Create(ctx, &voucher)
+	err = uc.voucherRepository.Create(ctx, &voucher)
 	if err != nil {
 		return nil, err
 	}
@@ -108,15 +121,27 @@ func (uc *voucherUsecaseImpl) Create(ctx context.Context, input dto.UpdateVouche
 }
 
 func (uc *voucherUsecaseImpl) Update(ctx context.Context, input dto.UpdateVoucherRequest) (*dto.VoucherDetail, error) {
+	expiry, err := time.Parse("2006-01-02", input.ExpiryDate)
+	if err != nil {
+		expiry, err = time.Parse("2006-01-02T15:04:05Z", input.ExpiryDate)
+		if err != nil {
+			return nil, fmt.Errorf("invalid date format, must be YYYY-MM-DD: %w", err)
+		}
+	}
+	discountPercent, err := strconv.Atoi(input.DiscountPercent)
+	if err != nil {
+		return nil, fmt.Errorf("invalid discount percent, must be an integer: %w", err)
+	}
+
 	voucher := entity.Voucher{
 		ID:              input.ID,
 		VoucherCode:     input.VoucherCode,
-		DiscountPercent: input.DiscountPercent,
-		ExpiryDate:      input.ExpiryDate,
+		DiscountPercent: discountPercent,
+		ExpiryDate:      expiry,
 		UpdatedAt:       time.Now(),
 	}
 
-	err := uc.voucherRepository.Update(ctx, &voucher)
+	err = uc.voucherRepository.Update(ctx, &voucher)
 	if err != nil {
 		return nil, err
 	}

@@ -25,26 +25,31 @@ func newRouter(h routerOpts, u utilOpts, config *config.Config, log *logrus.Logg
 	router := gin.New()
 
 	corsConfig := cors.DefaultConfig()
+	corsRouting(router, corsConfig)
 
 	router.ContextWithFallback = true
 
 	appvalidator.AppValidator()
 
+	router.NoRoute(func(c *gin.Context) {
+		c.Header("Access-Control-Allow-Origin", "http://localhost:5173")
+		c.Header("Access-Control-Allow-Credentials", "true")
+		c.JSON(404, gin.H{"error": "route not found"})
+	})
+
 	router.Use(
 		middleware.Logger(log),
 		middleware.RequestIdHandlerMiddleware,
 		middleware.ErrorHandlerMiddleware,
+		// middleware.NormalizeQuery(),
 		gin.Recovery(),
 	)
-
 	authMiddleware := middleware.AuthMiddleware(u.JwtHelper, config)
 
 	// userAuthorizationMiddleware := middleware.UserAuthorizationMiddleware
 	// doctorAuthorizationMiddleware := middleware.DoctorAuthorizationMiddleware
 	// pharmacyManagerAuthorizationMiddleware := middleware.PharmacyManagerAuthorizationMiddleware
 	// adminAuthorizationMiddleware := middleware.AdminAuthorizationMiddleware
-
-	corsRouting(router, corsConfig)
 	// authenticationRouting(router, h.Authentication)
 
 	api := router.Group("/api/v1")
@@ -58,7 +63,7 @@ func newRouter(h routerOpts, u utilOpts, config *config.Config, log *logrus.Logg
 }
 
 func corsRouting(router *gin.Engine, configCors cors.Config) {
-	configCors.AllowAllOrigins = true
+	configCors.AllowOrigins = []string{"http://localhost:5173"}
 	configCors.AllowMethods = []string{"POST", "GET", "PUT", "PATCH", "DELETE"}
 	configCors.AllowHeaders = []string{"Origin", "Authorization", "Content-Type", "Accept", "User-Agent", "Cache-Control"}
 	configCors.ExposeHeaders = []string{"Content-Length"}
@@ -79,7 +84,7 @@ func authenticationRouting(router *gin.RouterGroup, handler *handler.Authenticat
 func userRouting(router *gin.RouterGroup, handler *handler.UserHandler, authMiddleware gin.HandlerFunc) {
 	authRouter := router.Group("/users")
 
-	authRouter.GET("/", authMiddleware, handler.IndexUser)
+	authRouter.GET("", authMiddleware, handler.IndexUser)
 	authRouter.GET("/:id", authMiddleware, handler.ReadUser)
 	authRouter.PUT("/:id", authMiddleware, handler.UpdateUser)
 	authRouter.PUT("/:id/delete", authMiddleware, handler.DeleteUser)
@@ -88,8 +93,8 @@ func userRouting(router *gin.RouterGroup, handler *handler.UserHandler, authMidd
 func voucherRouting(router *gin.RouterGroup, handler *handler.VoucherHandler, authMiddleware gin.HandlerFunc) {
 	authRouter := router.Group("/voucher")
 
-	authRouter.GET("/", authMiddleware, handler.Index)
-	authRouter.POST("/", authMiddleware, handler.Create)
+	authRouter.GET("", authMiddleware, handler.Index)
+	authRouter.POST("", authMiddleware, handler.Create)
 	authRouter.GET("/:id", authMiddleware, handler.Read)
 	authRouter.PUT("/:id", authMiddleware, handler.Update)
 	authRouter.PUT("/:id/delete", authMiddleware, handler.Delete)

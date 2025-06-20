@@ -13,6 +13,7 @@ type Config struct {
 	Port                string
 	TokenDuration		int
 	Host				string
+	FEHost				string
 	FEPort              string
 	DbUsername          string
 	DbPassword          string
@@ -74,6 +75,7 @@ func Init(log *logrus.Logger) *Config {
 		Port:                os.Getenv("BE_PORT"),
 		TokenDuration:		 tokenDUration,
 		Host:				 os.Getenv("HOST"),
+		FEHost:              os.Getenv("FE_HOST"),
 		FEPort:              os.Getenv("FE_PORT"),
 		DbUsername:          os.Getenv("DB_USERNAME"),
 		DbPassword:          os.Getenv("DB_PASSWORD"),

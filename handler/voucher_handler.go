@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"log"
 	"net/http"
 	"strconv"
 
@@ -90,6 +91,7 @@ func (h *VoucherHandler) Update(c *gin.Context) {
 	input.ID = id
 	data, err := h.voucherUsecase.Update(c.Request.Context(), input)
 	if err != nil {
+		log.Println("update error:", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update voucher"})
 		return
 	}
