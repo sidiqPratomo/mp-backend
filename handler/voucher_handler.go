@@ -21,6 +21,7 @@ func NewVoucherHandler(voucherUsecase usecase.VoucherUsecase) VoucherHandler {
 }
 
 func (h *VoucherHandler) Index(c *gin.Context) {
+	log.Println("🔵 Reached GET /voucher handler")
 	var query dto.QueryParams
 	if err := c.BindQuery(&query); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -29,6 +30,7 @@ func (h *VoucherHandler) Index(c *gin.Context) {
 
 	resp, err := h.voucherUsecase.Index(c.Request.Context(), query)
 	if err != nil {
+		log.Println("get error:", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"status":  false,
 			"message": "failed to get vouchers",

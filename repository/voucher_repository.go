@@ -98,8 +98,8 @@ func (r *voucherRepositoryDB) FindByID(ctx context.Context, id int) (*entity.Vou
 
 func (r *voucherRepositoryDB) Create(ctx context.Context, voucher *entity.Voucher) error {
 	query := `
-		INSERT INTO vouchers (voucher_code, discount_percent, expiry_date, created_at, updated_at)
-		VALUES (?, ?, ?, ?, ?)
+		INSERT INTO vouchers (voucher_code, discount_percent, expiry_date, created_at, updated_at, status)
+		VALUES (?, ?, ?, ?, ?, 1)
 	`
 	res, err := r.db.ExecContext(ctx, query,
 		voucher.VoucherCode,
@@ -140,7 +140,7 @@ func (r *voucherRepositoryDB) SoftDeleteVoucher(ctx context.Context, voucherID i
 	now := time.Now()
 	query := `
 		UPDATE vouchers
-		SET deleted_at = ?
+		SET deleted_at = ?, status = 0
 		WHERE id = ? AND deleted_at IS NULL
 	`
 	_, err := r.db.ExecContext(ctx, query, now, voucherID)

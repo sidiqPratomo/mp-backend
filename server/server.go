@@ -94,6 +94,7 @@ func voucherRouting(router *gin.RouterGroup, handler *handler.VoucherHandler, au
 	authRouter := router.Group("/voucher")
 
 	authRouter.GET("", authMiddleware, handler.Index)
+	authRouter.GET("/", authMiddleware, handler.Index)
 	authRouter.POST("", authMiddleware, handler.Create)
 	authRouter.GET("/:id", authMiddleware, handler.Read)
 	authRouter.PUT("/:id", authMiddleware, handler.Update)
