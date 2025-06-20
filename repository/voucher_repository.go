@@ -92,7 +92,7 @@ func (r *voucherRepositoryDB) FindAll(ctx context.Context, params entity.Voucher
 	}
 
 	query += " LIMIT ? OFFSET ?"
-	args = append(args, params.Limit, params.Offset)
+	args = append(args, params.Limit, params.Skip)
 
 	rows, err := r.db.QueryContext(ctx, query, args...)
 	if err != nil {

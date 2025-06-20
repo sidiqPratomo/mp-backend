@@ -15,7 +15,7 @@ type Voucher struct {
 
 type VoucherQuery struct {
 	Limit     int
-	Offset    int
+	Skip    int
 	SortBy    string
 	SortOrder string
 	Status    *int
