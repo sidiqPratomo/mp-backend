@@ -18,7 +18,7 @@ type VoucherUsecase interface {
 	Create(ctx context.Context, input dto.UpdateVoucherRequest) (*dto.VoucherDetail, error)
 	Update(ctx context.Context, input dto.UpdateVoucherRequest) (*dto.VoucherDetail, error)
 	SoftDelete(ctx context.Context, voucherID int, updatedBy string) error
-	UploadCSV(ctx context.Context, file *multipart.FileHeader, bucket, path string) error
+	UploadCSV(ctx context.Context, file *multipart.FileHeader, bucket, path string) (string, error)
 }
 
 type voucherUsecaseImpl struct {
@@ -38,7 +38,7 @@ func NewVoucherUsecaseImpl(opts VoucherUsecaseImplOpts) voucherUsecaseImpl {
 	}
 }
 
-func (uc *voucherUsecaseImpl) UploadCSV(ctx context.Context, file *multipart.FileHeader, bucket, path string) error {
+func (uc *voucherUsecaseImpl) UploadCSV(ctx context.Context, file *multipart.FileHeader, bucket, path string) (string, error) {
 	return uc.voucherRepository.SaveCSVFile(ctx, file, bucket, path)
 }
 

@@ -57,6 +57,7 @@ func newRouter(h routerOpts, u utilOpts, config *config.Config, log *logrus.Logg
 		authenticationRouting(api, h.Authentication, authMiddleware)
 		userRouting(api, h.User, authMiddleware)
 		voucherRouting(api, h.Voucher, authMiddleware)
+		fileRouting(api, h.Voucher)
 	}
 
 	return router
@@ -100,4 +101,8 @@ func voucherRouting(router *gin.RouterGroup, handler *handler.VoucherHandler, au
 	authRouter.GET("/:id", authMiddleware, handler.Read)
 	authRouter.PUT("/:id", authMiddleware, handler.Update)
 	authRouter.PUT("/:id/delete", authMiddleware, handler.Delete)
+}
+
+func fileRouting(router *gin.RouterGroup, handler *handler.VoucherHandler) {
+	router.GET("/file/download", handler.DownloadFileHandler)
 }

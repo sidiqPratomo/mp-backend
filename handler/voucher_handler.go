@@ -1,8 +1,11 @@
 package handler
 
 import (
+	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -60,7 +63,7 @@ func (h *VoucherHandler) UploadCSV(c *gin.Context) {
 		path = "csv"
 	}
 
-	err = h.voucherUsecase.UploadCSV(c.Request.Context(), file, bucket, path)
+	filename, err := h.voucherUsecase.UploadCSV(c.Request.Context(), file, bucket, path)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 		return
@@ -70,9 +73,9 @@ func (h *VoucherHandler) UploadCSV(c *gin.Context) {
 		"status":  true,
 		"message": "CSV uploaded successfully",
 		"data": map[string]string{
-			"bucket": bucket,
-			"path":   path,
-			"filename": file.Filename, // or the final stored name if returned
+			"bucket":   bucket,
+			"path":     path,
+			"filename": filename,
 		},
 	})
 }
@@ -159,4 +162,26 @@ func (h *VoucherHandler) Delete(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"status": true, "message": "voucher deleted"})
+}
+
+func (h *VoucherHandler) DownloadFileHandler(c *gin.Context) {
+	bucket := c.Query("bucket")
+	path := c.Query("path")
+	filename := c.Query("filename")
+
+	if bucket == "" || path == "" || filename == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "bucket, path, and filename are required"})
+		return
+	}
+
+	filePath := filepath.Join("storage", bucket, path, filename)
+
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		c.JSON(http.StatusNotFound, gin.H{"error": "file not found"})
+		return
+	}
+
+	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
+	c.Header("Content-Type", "application/octet-stream")
+	c.File(filePath)
 }

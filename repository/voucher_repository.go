@@ -20,7 +20,7 @@ type VoucherRepository interface {
 	Create(ctx context.Context, voucher *entity.Voucher) error
 	FindByID(ctx context.Context, id int) (*entity.Voucher, error)
 	FindAll(ctx context.Context, params entity.VoucherQuery) ([]entity.Voucher, int, error)
-	SaveCSVFile(ctx context.Context, file *multipart.FileHeader, bucket, subPath string) error
+	SaveCSVFile(ctx context.Context, file *multipart.FileHeader, bucket, subPath string) (string, error)
 }
 
 type voucherRepositoryDB struct {
@@ -86,7 +86,7 @@ func (r *voucherRepositoryDB) FindAll(ctx context.Context, params entity.Voucher
 }
 
 // repository/voucher_repository.go
-func (r *voucherRepositoryDB) SaveCSVFile(ctx context.Context, file *multipart.FileHeader, bucket, subPath string) error {
+func (r *voucherRepositoryDB) SaveCSVFile(ctx context.Context, file *multipart.FileHeader, bucket, subPath string) (string, error) {
 	// Generate unique filename
 	ext := filepath.Ext(file.Filename)
 	filenameOnly := file.Filename[:len(file.Filename)-len(ext)]
@@ -96,11 +96,15 @@ func (r *voucherRepositoryDB) SaveCSVFile(ctx context.Context, file *multipart.F
 	targetDir := filepath.Join("storage", bucket, subPath)
 	err := os.MkdirAll(targetDir, os.ModePerm)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	dst := filepath.Join(targetDir, uniqueFilename)
-	return util.SaveUploadedFile(file, dst)
+	if err := util.SaveUploadedFile(file, dst); err != nil {
+		return "", err
+	}
+
+	return uniqueFilename, nil
 }
 
 func (r *voucherRepositoryDB) FindByID(ctx context.Context, id int) (*entity.Voucher, error) {
