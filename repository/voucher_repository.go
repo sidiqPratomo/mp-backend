@@ -21,6 +21,7 @@ type VoucherRepository interface {
 	FindByID(ctx context.Context, id int) (*entity.Voucher, error)
 	FindAll(ctx context.Context, params entity.VoucherQuery) ([]entity.Voucher, int, error)
 	SaveCSVFile(ctx context.Context, file *multipart.FileHeader, bucket, subPath string) (string, error)
+	FindAllForExport(ctx context.Context) ([]entity.Voucher, error)
 }
 
 type voucherRepositoryDB struct {
@@ -31,6 +32,39 @@ func NewVoucherRepositoryDB(db *sql.DB) voucherRepositoryDB {
 	return voucherRepositoryDB{
 		db: db,
 	}
+}
+
+func (r *voucherRepositoryDB) FindAllForExport(ctx context.Context) ([]entity.Voucher, error) {
+	query := `
+		SELECT id, voucher_code, discount_percent, expiry_date, created_at, updated_at, file
+		FROM vouchers
+		WHERE deleted_at IS NULL
+		ORDER BY created_at DESC
+	`
+
+	rows, err := r.db.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var vouchers []entity.Voucher
+	for rows.Next() {
+		var v entity.Voucher
+		var file sql.NullString
+		if err := rows.Scan(
+			&v.ID, &v.VoucherCode, &v.DiscountPercent, &v.ExpiryDate,
+			&v.CreatedAt, &v.UpdatedAt, &file,
+		); err != nil {
+			return nil, err
+		}
+		if file.Valid {
+			v.File = &file.String
+		}
+		vouchers = append(vouchers, v)
+	}
+
+	return vouchers, nil
 }
 
 func (r *voucherRepositoryDB) FindAll(ctx context.Context, params entity.VoucherQuery) ([]entity.Voucher, int, error) {

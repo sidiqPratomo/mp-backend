@@ -185,3 +185,12 @@ func (h *VoucherHandler) DownloadFileHandler(c *gin.Context) {
 	c.Header("Content-Type", "application/octet-stream")
 	c.File(filePath)
 }
+
+func (h *VoucherHandler) ExportCSV(c *gin.Context) {
+	c.Header("Content-Disposition", "attachment; filename=vouchers.csv")
+	c.Header("Content-Type", "text/csv")
+
+	if err := h.voucherUsecase.ExportCSV(c.Writer, c.Request.Context()); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	}
+}

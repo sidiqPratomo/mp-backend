@@ -2,8 +2,11 @@ package usecase
 
 import (
 	"context"
+	"encoding/csv"
 	"fmt"
+	"io"
 	"mime/multipart"
+	"strconv"
 	"time"
 
 	"github.com/sidiqPratomo/mp-backend/dto"
@@ -19,6 +22,7 @@ type VoucherUsecase interface {
 	Update(ctx context.Context, input dto.UpdateVoucherRequest) (*dto.VoucherDetail, error)
 	SoftDelete(ctx context.Context, voucherID int, updatedBy string) error
 	UploadCSV(ctx context.Context, file *multipart.FileHeader, bucket, path string) (string, error)
+	ExportCSV(w io.Writer, ctx context.Context) error
 }
 
 type voucherUsecaseImpl struct {
@@ -36,6 +40,35 @@ func NewVoucherUsecaseImpl(opts VoucherUsecaseImplOpts) voucherUsecaseImpl {
 		voucherRepository: opts.VoucherRepository,
 		transaction:       opts.Transaction,
 	}
+}
+
+func (uc *voucherUsecaseImpl) ExportCSV(w io.Writer, ctx context.Context) error {
+	vouchers, err := uc.voucherRepository.FindAllForExport(ctx)
+	if err != nil {
+		return err
+	}
+
+	writer := csv.NewWriter(w)
+	defer writer.Flush()
+
+	// CSV header
+	if err := writer.Write([]string{"voucher_code", "discount_percent", "expiry_date"}); err != nil {
+		return err
+	}
+
+	// CSV rows
+	for _, v := range vouchers {
+		record := []string{
+			v.VoucherCode,
+			strconv.Itoa(v.DiscountPercent),
+			v.ExpiryDate.Format("2006-01-02"),
+		}
+		if err := writer.Write(record); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (uc *voucherUsecaseImpl) UploadCSV(ctx context.Context, file *multipart.FileHeader, bucket, path string) (string, error) {

@@ -101,6 +101,7 @@ func voucherRouting(router *gin.RouterGroup, handler *handler.VoucherHandler, au
 	authRouter.GET("/:id", authMiddleware, handler.Read)
 	authRouter.PUT("/:id", authMiddleware, handler.Update)
 	authRouter.PUT("/:id/delete", authMiddleware, handler.Delete)
+	authRouter.GET("/export", authMiddleware, handler.ExportCSV)
 }
 
 func fileRouting(router *gin.RouterGroup, handler *handler.VoucherHandler) {
