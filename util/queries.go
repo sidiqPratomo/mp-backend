@@ -34,3 +34,11 @@ func SetDefaultQueryParams(raw QueryParam) (QueryParam, error) {
 
 	return params, nil
 }
+
+
+func DerefString(s *string) string {
+	if s == nil {
+		return ""
+	}
+	return *s
+}

@@ -4,12 +4,12 @@ import (
 	"context"
 	"fmt"
 	"mime/multipart"
-	"strconv"
 	"time"
 
 	"github.com/sidiqPratomo/mp-backend/dto"
 	"github.com/sidiqPratomo/mp-backend/entity"
 	"github.com/sidiqPratomo/mp-backend/repository"
+	"github.com/sidiqPratomo/mp-backend/util"
 )
 
 type VoucherUsecase interface {
@@ -89,6 +89,7 @@ func (uc *voucherUsecaseImpl) Read(ctx context.Context, voucherID int) (*dto.Vou
 		ExpiryDate:      v.ExpiryDate,
 		CreatedAt:       v.CreatedAt,
 		UpdatedAt:       v.UpdatedAt,
+		File:            util.DerefString(v.File),
 	}, nil
 }
 
@@ -99,17 +100,13 @@ func (uc *voucherUsecaseImpl) Create(ctx context.Context, input dto.UpdateVouche
 		return nil, fmt.Errorf("invalid date format, must be YYYY-MM-DD: %w", err)
 	}
 
-	discountPercent, err := strconv.Atoi(input.DiscountPercent)
-	if err != nil {
-		return nil, fmt.Errorf("invalid discount percent, must be an integer: %w", err)
-	}
-
 	voucher := entity.Voucher{
 		VoucherCode:     input.VoucherCode,
-		DiscountPercent: discountPercent,
+		DiscountPercent: input.DiscountPercent,
 		ExpiryDate:      parsedDate,
 		CreatedAt:       time.Now(),
 		UpdatedAt:       time.Now(),
+		File:            &input.File,
 	}
 	err = uc.voucherRepository.Create(ctx, &voucher)
 	if err != nil {
@@ -123,6 +120,7 @@ func (uc *voucherUsecaseImpl) Create(ctx context.Context, input dto.UpdateVouche
 		ExpiryDate:      voucher.ExpiryDate,
 		CreatedAt:       voucher.CreatedAt,
 		UpdatedAt:       voucher.UpdatedAt,
+		File:            *voucher.File,
 	}, nil
 }
 
@@ -134,17 +132,14 @@ func (uc *voucherUsecaseImpl) Update(ctx context.Context, input dto.UpdateVouche
 			return nil, fmt.Errorf("invalid date format, must be YYYY-MM-DD: %w", err)
 		}
 	}
-	discountPercent, err := strconv.Atoi(input.DiscountPercent)
-	if err != nil {
-		return nil, fmt.Errorf("invalid discount percent, must be an integer: %w", err)
-	}
 
 	voucher := entity.Voucher{
 		ID:              input.ID,
 		VoucherCode:     input.VoucherCode,
-		DiscountPercent: discountPercent,
+		DiscountPercent: input.DiscountPercent,
 		ExpiryDate:      expiry,
 		UpdatedAt:       time.Now(),
+		File:            &input.File,
 	}
 
 	err = uc.voucherRepository.Update(ctx, &voucher)

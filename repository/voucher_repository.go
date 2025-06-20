@@ -93,7 +93,6 @@ func (r *voucherRepositoryDB) SaveCSVFile(ctx context.Context, file *multipart.F
 	timestamp := time.Now().Format("20060102_150405.000000")
 	uniqueFilename := fmt.Sprintf("%s_%s%s", filenameOnly, timestamp, ext)
 
-	// Final path: storage/{bucket}/{path}
 	targetDir := filepath.Join("storage", bucket, subPath)
 	err := os.MkdirAll(targetDir, os.ModePerm)
 	if err != nil {
@@ -106,13 +105,13 @@ func (r *voucherRepositoryDB) SaveCSVFile(ctx context.Context, file *multipart.F
 
 func (r *voucherRepositoryDB) FindByID(ctx context.Context, id int) (*entity.Voucher, error) {
 	query := `
-		SELECT id, voucher_code, discount_percent, expiry_date, created_at, updated_at
+		SELECT id, voucher_code, discount_percent, expiry_date, created_at, updated_at, file
 		FROM vouchers
 		WHERE id = ? AND deleted_at IS NULL
 	`
 	var v entity.Voucher
 	err := r.db.QueryRowContext(ctx, query, id).Scan(
-		&v.ID, &v.VoucherCode, &v.DiscountPercent, &v.ExpiryDate, &v.CreatedAt, &v.UpdatedAt,
+		&v.ID, &v.VoucherCode, &v.DiscountPercent, &v.ExpiryDate, &v.CreatedAt, &v.UpdatedAt, &v.File,
 	)
 	if err != nil {
 		return nil, err
@@ -122,8 +121,8 @@ func (r *voucherRepositoryDB) FindByID(ctx context.Context, id int) (*entity.Vou
 
 func (r *voucherRepositoryDB) Create(ctx context.Context, voucher *entity.Voucher) error {
 	query := `
-		INSERT INTO vouchers (voucher_code, discount_percent, expiry_date, created_at, updated_at, status)
-		VALUES (?, ?, ?, ?, ?, 1)
+		INSERT INTO vouchers (voucher_code, discount_percent, expiry_date, created_at, updated_at, status, file)
+		VALUES (?, ?, ?, ?, ?, 1, ?)
 	`
 	res, err := r.db.ExecContext(ctx, query,
 		voucher.VoucherCode,
@@ -131,6 +130,7 @@ func (r *voucherRepositoryDB) Create(ctx context.Context, voucher *entity.Vouche
 		voucher.ExpiryDate,
 		voucher.CreatedAt,
 		voucher.UpdatedAt,
+		voucher.File,
 	)
 	if err != nil {
 		return err
@@ -147,7 +147,7 @@ func (r *voucherRepositoryDB) Create(ctx context.Context, voucher *entity.Vouche
 func (r *voucherRepositoryDB) Update(ctx context.Context, voucher *entity.Voucher) error {
 	query := `
 		UPDATE vouchers
-		SET voucher_code = ?, discount_percent = ?, expiry_date = ?, updated_at = ?
+		SET voucher_code = ?, discount_percent = ?, expiry_date = ?, updated_at = ?, file = ?
 		WHERE id = ? AND deleted_at IS NULL
 	`
 	_, err := r.db.ExecContext(ctx, query,
@@ -155,7 +155,8 @@ func (r *voucherRepositoryDB) Update(ctx context.Context, voucher *entity.Vouche
 		voucher.DiscountPercent,
 		voucher.ExpiryDate,
 		voucher.UpdatedAt,
-		voucher.ID,
+		voucher.File, 
+		voucher.ID, 
 	)
 	return err
 }

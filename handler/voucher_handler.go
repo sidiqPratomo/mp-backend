@@ -104,6 +104,7 @@ func (h *VoucherHandler) Create(c *gin.Context) {
 
 	data, err := h.voucherUsecase.Create(c.Request.Context(), input)
 	if err != nil {
+		log.Println("create error:", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create voucher"})
 		return
 	}
