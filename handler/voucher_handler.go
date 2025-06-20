@@ -42,6 +42,41 @@ func (h *VoucherHandler) Index(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
+// handler/voucher_handler.go
+func (h *VoucherHandler) UploadCSV(c *gin.Context) {
+	file, err := c.FormFile("file")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "File is required"})
+		return
+	}
+
+	bucket := c.PostForm("bucket")
+	if bucket == "" {
+		bucket = "files"
+	}
+
+	path := c.PostForm("path")
+	if path == "" {
+		path = "csv"
+	}
+
+	err = h.voucherUsecase.UploadCSV(c.Request.Context(), file, bucket, path)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":  true,
+		"message": "CSV uploaded successfully",
+		"data": map[string]string{
+			"bucket": bucket,
+			"path":   path,
+			"filename": file.Filename, // or the final stored name if returned
+		},
+	})
+}
+
 // GET /vouchers/:id
 func (h *VoucherHandler) Read(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))

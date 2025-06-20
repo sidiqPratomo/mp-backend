@@ -8,3 +8,5 @@ sql/pharmacy-drugs-dml.sql
 Makefile/Makefile
 Makefile
 *.pem
+storage
+storage/*

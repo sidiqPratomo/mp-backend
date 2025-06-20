@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"fmt"
+	"mime/multipart"
 	"strconv"
 	"time"
 
@@ -17,6 +18,7 @@ type VoucherUsecase interface {
 	Create(ctx context.Context, input dto.UpdateVoucherRequest) (*dto.VoucherDetail, error)
 	Update(ctx context.Context, input dto.UpdateVoucherRequest) (*dto.VoucherDetail, error)
 	SoftDelete(ctx context.Context, voucherID int, updatedBy string) error
+	UploadCSV(ctx context.Context, file *multipart.FileHeader, bucket, path string) error
 }
 
 type voucherUsecaseImpl struct {
@@ -34,6 +36,10 @@ func NewVoucherUsecaseImpl(opts VoucherUsecaseImplOpts) voucherUsecaseImpl {
 		voucherRepository: opts.VoucherRepository,
 		transaction:       opts.Transaction,
 	}
+}
+
+func (uc *voucherUsecaseImpl) UploadCSV(ctx context.Context, file *multipart.FileHeader, bucket, path string) error {
+	return uc.voucherRepository.SaveCSVFile(ctx, file, bucket, path)
 }
 
 func (uc *voucherUsecaseImpl) Index(ctx context.Context, params dto.QueryParams) (*dto.ResponseIndex[dto.PagedResult[dto.VoucherDetail]], error) {

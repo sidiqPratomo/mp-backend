@@ -91,11 +91,12 @@ func userRouting(router *gin.RouterGroup, handler *handler.UserHandler, authMidd
 }
 
 func voucherRouting(router *gin.RouterGroup, handler *handler.VoucherHandler, authMiddleware gin.HandlerFunc) {
-	authRouter := router.Group("/voucher")
+	authRouter := router.Group("/vouchers")
 
 	authRouter.GET("", authMiddleware, handler.Index)
 	authRouter.GET("/", authMiddleware, handler.Index)
 	authRouter.POST("", authMiddleware, handler.Create)
+	authRouter.POST("/upload-csv", authMiddleware, handler.UploadCSV)
 	authRouter.GET("/:id", authMiddleware, handler.Read)
 	authRouter.PUT("/:id", authMiddleware, handler.Update)
 	authRouter.PUT("/:id/delete", authMiddleware, handler.Delete)
